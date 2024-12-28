@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CompressorRunnings {
+  RunningId    Int         @id(map: "PK_CompressorRunnings") @default(autoincrement())
+  CompressorId Int
+  Temperature  Float?
+  Vibration    Float?
+  TimeStamp    DateTime    @db.Timestamptz(6)
+  Compressors  Compressors @relation(fields: [CompressorId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CompressorRunnings_Compressors_CompressorId")
+
+  @@index([CompressorId], map: "IX_CompressorRunnings_CompressorId")
+}
+
+model Compressors {
+  Id                 Int                  @id(map: "PK_Compressors") @default(autoincrement())
+  NumberOfFailures   Int?
+  MaximumTemperature Float?
+  MaximumVibration   Float?
+  LastMaintenance    DateTime?            @db.Timestamptz(6)
+  OperatingTime      Float?
+  OilQuality         String?
+  CompressorRunnings CompressorRunnings[]
+}
+
+model PrensaRunnings {
+  RunningId        Int      @id(map: "PK_PrensaRunnings") @default(autoincrement())
+  PrensaId         Int
+  DistanceTraveled Float?
+  TimeStamp        DateTime @db.Timestamptz(6)
+  Prensas          Prensas  @relation(fields: [PrensaId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PrensaRunnings_Prensas_PrensaId")
+
+  @@index([PrensaId], map: "IX_PrensaRunnings_PrensaId")
+}
+
+model Prensas {
+  Id               Int              @id(map: "PK_Prensas") @default(autoincrement())
+  NumberOfFailures Int?
+  MaximumDistance  Float?
+  LastMaintenance  DateTime?        @db.Timestamptz(6)
+  OperatingTime    Float?
+  OilQuality       String?
+  Status      Int?
+  PrensaRunnings   PrensaRunnings[]
+}
+
+model EFMigrationsHistory {
+  MigrationId    String @id(map: "PK___EFMigrationsHistory") @db.VarChar(150)
+  ProductVersion String @db.VarChar(32)
+
+  @@map("__EFMigrationsHistory")
+}
+
+model Distance {
+  id_Running BigInt
+  timestamp  DateTime @db.Timestamptz(6)
+  distance   Float    @db.Real
+  Id         BigInt   @id(map: "PK_Distance") @default(autoincrement())
+  Runnings   Runnings @relation(fields: [id_Running], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Distance_Runnings_id_Running")
+
+  @@index([id_Running], map: "IX_Distance_id_Running")
+}
+
+model Machines {
+  id                  BigInt     @id(map: "PK_Machines")
+  needFix             Boolean
+  maxTemperature      Float?     @db.Real
+  maxVibration        Float?     @db.Real
+  oil_quality         Float      @db.Real
+  description         String     @default("")
+  type                BigInt     @default(0)
+  maxDistanceTraveled Float?     @db.Real
+  Runnings            Runnings[]
+}
+
+model Runnings {
+  id               BigInt        @id(map: "PK_Runnings") @default(autoincrement())
+  id_Machine       BigInt
+  typeError        String?
+  meanTemperature  Float?        @db.Real
+  meanVibration    Float?        @db.Real
+  start_timestamp  DateTime      @db.Timestamptz(6)
+  end_timestamp    DateTime?     @db.Timestamptz(6)
+  distanceTraveled Float?        @db.Real
+  Distance         Distance[]
+  Machines         Machines      @relation(fields: [id_Machine], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Runnings_Machines_id_Machine")
+  Temperature      Temperature[]
+  Vibration        Vibration[]
+
+  @@index([id_Machine], map: "IX_Runnings_id_Machine")
+}
+
+model Temperature {
+  id_Running  BigInt
+  timestamp   DateTime @db.Timestamptz(6)
+  temperature Float    @db.Real
+  Id          BigInt   @id(map: "PK_Temperature") @default(autoincrement())
+  Runnings    Runnings @relation(fields: [id_Running], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Temperature_Runnings_id_Running")
+
+  @@index([id_Running], map: "IX_Temperature_id_Running")
+}
+
+model Vibration {
+  id_Running BigInt
+  timestamp  DateTime @db.Timestamptz(6)
+  vibration  Float    @db.Real
+  Id         BigInt   @id(map: "PK_Vibration") @default(autoincrement())
+  Runnings   Runnings @relation(fields: [id_Running], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Vibration_Runnings_id_Running")
+
+  @@index([id_Running], map: "IX_Vibration_id_Running")
+}
